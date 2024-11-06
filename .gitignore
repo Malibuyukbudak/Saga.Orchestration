@@ -1,0 +1,66 @@
+# Rider IDE
+.idea/
+*.sln.iml
+.idea/**/workspace.xml
+.idea/**/tasks.xml
+.idea/dictionaries
+.idea/**/shelf
+.idea/**/workspace.xml
+.idea/modules.xml
+
+# Rider run configurations
+.idea/runConfigurations/
+
+# User-specific files
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Rider log
+.idea/log
+
+# .NET Core
+project.lock.json
+project.fragment.lock.json
+artifacts/
+bin/
+obj/
+appsettings.*.json
+App_Data/
+.vscode/
+.vs/
+.vscode/**
+.DS_Store
+.history/
+
+# NuGet
+*.nupkg
+packages/
+*.snupkg
+
+# LibMan
+libman.json
+wwwroot/lib/
+
+# Logs
+*.log
+
+# Coverage Reports
+*.coverage
+*.coveragexml
+*.log
+TestResults
+
+# NCrunch
+*.ncrunchproject
+*.ncrunchsolution
+_nCrunch_*
+.*crunch*.local.xml
+
+# User-specific files
+*.rsuser
+*.user
+*.suo
+*.swp
+*.sln.docstates
