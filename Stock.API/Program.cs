@@ -1,4 +1,7 @@
+using MassTransit;
 using MongoDB.Driver;
+using StateMachine.Settings;
+using Stock.API.Consumers;
 using Stock.API.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -7,7 +10,19 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddSingleton<MongoDbService>();
 
-var app = builder.Build();
+builder.Services.AddMassTransit(configure =>
+{
+    configure.AddConsumer<OrderCreatedEventConsumer>();
+    configure.AddConsumer<StockRollbackMessageConsumer>();
+    configure.UsingRabbitMq((context, configurator) =>
+    {
+        configurator.Host(builder.Configuration["RabbitMQ"]);
+        configurator.ReceiveEndpoint(RabbitMQSettings.Stock_OrderCreatedEventQueue,
+            e => e.ConfigureConsumer<OrderCreatedEventConsumer>(context));
+        configurator.ReceiveEndpoint(RabbitMQSettings.Stock_RollbackMessageQueue,
+            e => e.ConfigureConsumer<StockRollbackMessageConsumer>(context));
+    });
+});
 
 using var scope = builder.Services.BuildServiceProvider().CreateScope();
 var mongoDbService = scope.ServiceProvider.GetRequiredService<MongoDbService>();
@@ -40,6 +55,9 @@ if (!await (await mongoDbService.GetCollection<Stock.API.Models.Stock>().FindAsy
         Count = 60
     });
 }
+
+var app = builder.Build();
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -47,5 +65,4 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
-
+app.Run();

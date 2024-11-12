@@ -2,7 +2,7 @@ namespace StateMachine.Settings;
 
 public static class RabbitMQSettings
 {
-    public const string StateMachineQueue = $"state-machine-queue";
+    public const string StateMachine = $"state-machine-queue";
 
     public const string Stock_OrderCreatedEventQueue = $"stock-order-created-event-queue";
 

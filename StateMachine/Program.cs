@@ -21,7 +21,7 @@ builder.Services.AddMassTransit(configurator =>
     configurator.UsingRabbitMq((context, _configure) =>
     {
         _configure.Host(builder.Configuration["RabbitMQ"]);
-        _configure.ReceiveEndpoint(RabbitMQSettings.StateMachineQueue, e =>
+        _configure.ReceiveEndpoint(RabbitMQSettings.StateMachine, e =>
             e.ConfigureSaga<OrderStateInstance>(context));
     });
 });
