@@ -16,7 +16,7 @@ public class OrderSuccessConsumer : IConsumer<OrderSuccessEvent>
 
     public async Task Consume(ConsumeContext<OrderSuccessEvent> context)
     {
-        Models.Order order = await _orderDbContext.Orders.FindAsync(context.Message.OrderId);
+        var order = await _orderDbContext.Orders.FindAsync(context.Message.OrderId);
         if (order != null)
         {
             order.OrderStatus = OrderStatus.Completed;

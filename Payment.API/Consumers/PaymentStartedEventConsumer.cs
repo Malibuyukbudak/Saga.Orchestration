@@ -8,20 +8,17 @@ namespace Payment.API.Consumers;
 public class PaymentStartedEventConsumer : IConsumer<PaymentStartedEvent>
 {
     private readonly ISendEndpointProvider _sendEndpointProvider;
-    private readonly IPublishEndpoint _publishEndpoint;
 
-    public PaymentStartedEventConsumer(ISendEndpointProvider sendEndpointProvider,
-        IPublishEndpoint publishEndpoint)
+    public PaymentStartedEventConsumer(ISendEndpointProvider sendEndpointProvider)
     {
-        this._sendEndpointProvider = sendEndpointProvider;
-        _publishEndpoint = publishEndpoint;
+        _sendEndpointProvider = sendEndpointProvider;
     }
 
     public async Task Consume(ConsumeContext<PaymentStartedEvent> context)
     {
-        ISendEndpoint sendEndpoint =
+        var sendEndpoint =
             await _sendEndpointProvider.GetSendEndpoint(new Uri($"queue:{RabbitMQSettings.StateMachine}"));
-        if (context.Message.TotalPrice <= 10000)
+        if (context.Message.TotalPrice <= 5600)
             await sendEndpoint.Send(new PaymentCompletedEvent(context.Message.CorrelationId));
         else
             await sendEndpoint.Send(new PaymentFailedEvent(context.Message.CorrelationId)

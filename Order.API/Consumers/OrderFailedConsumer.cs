@@ -16,7 +16,7 @@ public class OrderFailedConsumer : IConsumer<OrderFailedEvent>
 
     public async Task Consume(ConsumeContext<OrderFailedEvent> context)
     {
-        Models.Order order = await _orderDbContext.FindAsync<Models.Order>(context.Message.OrderId);
+        var order = await _orderDbContext.FindAsync<Models.Order>(context.Message.OrderId);
         if (order != null)
         {
             order.OrderStatus = OrderStatus.Fail;

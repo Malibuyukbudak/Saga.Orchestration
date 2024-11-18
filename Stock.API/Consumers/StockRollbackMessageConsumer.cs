@@ -20,7 +20,7 @@ public class StockRollbackMessageConsumer : IConsumer<StockRollBackMessage>
 
         foreach (var item in context.Message.OrderItems)
         {
-            Models.Stock stock =
+            var stock =
                 await (await collection.FindAsync(s => s.ProductId == item.ProductId)).FirstOrDefaultAsync();
             if (stock != null)
             {

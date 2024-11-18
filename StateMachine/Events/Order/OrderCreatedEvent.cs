@@ -1,8 +1,9 @@
+using MassTransit;
 using Stock.API.Messages;
 
 namespace Stock.API.Events;
 
-public class OrderCreatedEvent
+public class OrderCreatedEvent : CorrelatedBy<Guid>
 {
     public OrderCreatedEvent(Guid correlationId)
     {

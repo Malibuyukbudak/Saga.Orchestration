@@ -11,37 +11,34 @@ public class OrderCreatedEventConsumer : IConsumer<OrderCreatedEvent>
 {
     private readonly MongoDbService _mongoDbService;
     private readonly ISendEndpointProvider _sendEndpointProvider;
-    private readonly IPublishEndpoint _publishEndpoint;
 
     public OrderCreatedEventConsumer(
         MongoDbService mongoDbService,
-        ISendEndpointProvider sendEndpointProvider,
-        IPublishEndpoint publishEndpoint)
+        ISendEndpointProvider sendEndpointProvider)
     {
         _mongoDbService = mongoDbService;
         _sendEndpointProvider = sendEndpointProvider;
-        _publishEndpoint = publishEndpoint;
     }
 
     public async Task Consume(ConsumeContext<OrderCreatedEvent> context)
     {
+        var sendEndpoint =
+            await _sendEndpointProvider.GetSendEndpoint(new Uri($"queue:{RabbitMQSettings.StateMachine}"));
         List<bool> stockResult = new();
-        IMongoCollection<Models.Stock> collection = _mongoDbService.GetCollection<Models.Stock>();
+        var collection = _mongoDbService.GetCollection<Models.Stock>();
 
-        //Sipariş edilen ürünlerin stok miktarı sipariş adedinden fazla mı? değil mi?
+        //Stock control
         foreach (OrderItemMessage orderItem in context.Message.OrderItems)
             stockResult.Add(
                 (await collection.FindAsync(s => s.ProductId == orderItem.ProductId && s.Count > orderItem.Count))
                 .Any());
 
-        //Eğer fazlaysa sipariş edilen ürünlerin stok miktarı güncelleniyor.
-        ISendEndpoint sendEndpoint =
-            await _sendEndpointProvider.GetSendEndpoint(new Uri($"queue:{RabbitMQSettings.StateMachine}"));
+        //StockUpdated.
         if (stockResult.TrueForAll(sr => sr.Equals(true)))
         {
             foreach (OrderItemMessage orderItem in context.Message.OrderItems)
             {
-                Models.Stock stock = await (await collection.FindAsync(s => s.ProductId == orderItem.ProductId))
+                var stock = await (await collection.FindAsync(s => s.ProductId == orderItem.ProductId))
                     .FirstOrDefaultAsync();
                 stock.Count -= orderItem.Count;
                 await collection.FindOneAndReplaceAsync(x => x.ProductId == orderItem.ProductId, stock);
@@ -53,12 +50,12 @@ public class OrderCreatedEventConsumer : IConsumer<OrderCreatedEvent>
             };
             await sendEndpoint.Send(stockReservedEvent);
         }
-        //Eğer az ise siparişin iptal edilmesi için gerekli event gönderiliyor.
+        //StockFailed.
         else
         {
-            StockNotReservedEvent stockNotReservedEvent = new(context.Message.CorrelationId)
+            var stockNotReservedEvent = new StockNotReservedEvent(context.Message.CorrelationId)
             {
-                Message = "Stok yetersiz..."
+                Message = "Stok yetersiz."
             };
 
             await sendEndpoint.Send(stockNotReservedEvent);
